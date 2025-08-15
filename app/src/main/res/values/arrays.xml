@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="ocr_interval_labels">
+        <item>Manual</item>
+        <item>Every 10 sec</item>
+        <item>Every 30 sec</item>
+        <item>Every 1 min</item>
+        <item>Every 5 min</item>
+    </string-array>
+</resources>

@@ -54,7 +54,7 @@ class ScreenCaptureService : Service() {
         val mediaProjection: MediaProjection =
             projectionManager.getMediaProjection(mediaProjectionResultCode, mediaProjectionIntent!!)
         ScreenCaptureManager.capture(this, mediaProjection){ bitmap ->
-            ScreenCaptureManager.saveBitmap(this, bitmap)
+            android.widget.Toast.makeText(this, "Bitmap ready", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 

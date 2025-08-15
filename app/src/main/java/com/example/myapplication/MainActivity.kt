@@ -7,6 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import android.media.projection.MediaProjectionManager
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Button
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,6 +24,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         mediaProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        initializeTimerDropdown()
+
         registerScreenCaptureLauncher()
         requestScreenCapturePermission()
         findViewById<Button>(R.id.buttonCaptureSS).setOnClickListener {
@@ -31,6 +35,22 @@ class MainActivity : AppCompatActivity() {
             else
             {
                 captureAndDoOCR();
+            }
+        }
+    }
+
+    private fun initializeTimerDropdown() {
+        val dropDown = findViewById<AutoCompleteTextView>(R.id.dropdownOcrInterval)
+        val labels = resources.getStringArray(R.array.ocr_interval_labels)
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, labels)
+        dropDown.setAdapter(adapter)
+        dropDown.setOnItemClickListener { _, _, position, _ ->
+            when (position) {
+                0 -> stopOcrInterval()
+                1 -> startOcrInterval(10_000)
+                2 -> startOcrInterval(30_000)
+                3 -> startOcrInterval(60_000)
+                4 -> startOcrInterval(5 * 60_000)
             }
         }
     }
@@ -59,7 +79,6 @@ class MainActivity : AppCompatActivity() {
         ScreenCaptureManager.capture(this, projection) { bitmap ->
             // Handle the captured bitmap, e.g., perform OCR
             // For example, you can pass it to an OCR library or save it
-            android.widget.Toast.makeText(this, "Time to do OCR", android.widget.Toast.LENGTH_SHORT).show()
             OCRProcessor.recognizeText(bitmap, onTextExtracted =  { text ->
                 android.widget.Toast.makeText(this, "OCR Result: $text", android.widget.Toast.LENGTH_LONG).show()
             },onError = { e ->
@@ -69,4 +88,9 @@ class MainActivity : AppCompatActivity() {
         }
 
     }
+}
+
+private fun MainActivity.startOcrInterval(i: Int) {}
+
+private fun MainActivity.stopOcrInterval() {
 }

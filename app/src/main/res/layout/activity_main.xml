@@ -6,6 +6,40 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilOcrInterval"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="OCR interval"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="16dp">
+
+        <AutoCompleteTextView
+            android:id="@+id/dropdownOcrInterval"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none"
+            android:focusable="false"
+            android:clickable="true"
+            />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/switchAutoOcr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Auto OCR"
+        app:layout_constraintTop_toBottomOf="@id/tilOcrInterval"
+        app:layout_constraintStart_toStartOf="@id/tilOcrInterval"
+        android:layout_marginTop="8dp" />
+
     <Button
         android:id="@+id/buttonCaptureSS"
         android:layout_width="wrap_content"
