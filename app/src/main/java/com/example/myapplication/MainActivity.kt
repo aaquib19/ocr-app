@@ -1,21 +1,22 @@
 package com.example.myapplication
 
 import android.content.Intent
-import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import android.media.projection.MediaProjectionManager
+import android.os.Bundle
 import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
+
+    companion object{
+        private const val TAG = "MainActivity"
+    }
     private lateinit var mediaProjectionManager: MediaProjectionManager
     private var resultIntent: Intent? = null
     private var resultCode: Int = RESULT_CANCELED
@@ -62,14 +63,13 @@ class MainActivity : AppCompatActivity() {
                 if (result.resultCode == RESULT_OK && result.data != null) {
                     this.resultIntent = result.data
                     this.resultCode = result.resultCode
-                    Log.d("TAG", "MainActivity:resultCode:"+resultCode)
-                    Log.d("TAG", "MainActivity:resultIntent"+resultIntent)
+                    Log.d(TAG, "MainActivity:resultCode:"+resultCode)
+                    Log.d(TAG, "MainActivity:resultIntent"+resultIntent)
                     android.widget.Toast.makeText(
                         this,
                         "Permission granted",
                         android.widget.Toast.LENGTH_SHORT
                     ).show()
-                    ScreenCaptureService.startCaptureService(this, result.data!!, resultCode)
                 } else {
                     android.widget.Toast.makeText(
                         this,

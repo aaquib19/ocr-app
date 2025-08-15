@@ -1,6 +1,5 @@
 package com.example.myapplication
 
-import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
@@ -12,10 +11,7 @@ import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
-import android.os.IBinder
 import android.os.Looper
-import android.util.Log
-import android.widget.Toast
 import androidx.core.app.NotificationCompat
 
 class OcrForegroundService : Service() {
