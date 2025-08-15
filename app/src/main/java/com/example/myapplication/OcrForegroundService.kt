@@ -6,7 +6,10 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.media.Ringtone
+import android.media.RingtoneManager
 import android.media.projection.MediaProjectionManager
+import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -55,22 +58,38 @@ class OcrForegroundService : Service() {
             notificationManager.createNotificationChannel(channel)
         }
     }
-
+    fun playRingerSound(context: Context) {
+        val notification: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+        val ringtone: Ringtone = RingtoneManager.getRingtone(context, notification)
+        ringtone.play()
+        // Stop after 5 seconds
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (ringtone.isPlaying) {
+                ringtone.stop()
+            }
+        }, 5000) //
+    }
     private fun captureAndDoOCR() {
-        Toast.makeText(this, "Performing OCR work...", Toast.LENGTH_SHORT).show()
         // Placeholder for actual OCR work.
         mediaProjectionManager =
             getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         val projection = mediaProjectionManager.getMediaProjection(resultCode, resultIntent!!)
-        Log.d("TAG", "OcrForegroundService:resultCode:"+resultCode)
-        Log.d("TAG", "OcrForegroundService:resultIntent"+resultIntent)
         ScreenCaptureManager.capture(this, projection) { bitmap ->
             OCRProcessor.recognizeText(bitmap, onTextExtracted = { text ->
-                android.widget.Toast.makeText(
-                    this,
-                    "OCR Result: $text",
-                    android.widget.Toast.LENGTH_LONG
-                ).show()
+
+                val res = text.contains("FOOD") && text.contains("RESCUE");
+
+                if(res)
+                {
+                    playRingerSound(this)
+                    android.widget.Toast.makeText(
+                        this,
+                        "Food rescue",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                }
+
+
             }, onError = { e ->
                 android.widget.Toast.makeText(
                     this,
