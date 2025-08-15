@@ -12,28 +12,28 @@ import android.widget.AutoCompleteTextView
 import android.widget.Button
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
     private lateinit var mediaProjectionManager: MediaProjectionManager
     private var resultIntent: Intent? = null
-    private var resultCode : Int = 0
+    private var resultCode: Int = 0
 
-    private lateinit var screenCaptureLauncher : ActivityResultLauncher<Intent>
+    private lateinit var screenCaptureLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        mediaProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        mediaProjectionManager =
+            getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         initializeTimerDropdown()
 
         registerScreenCaptureLauncher()
         requestScreenCapturePermission()
         findViewById<Button>(R.id.buttonCaptureSS).setOnClickListener {
-            if(resultIntent == null) {
+            if (resultIntent == null) {
                 requestScreenCapturePermission()
-            }
-            else
-            {
+            } else {
                 captureAndDoOCR();
             }
         }
@@ -56,17 +56,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun registerScreenCaptureLauncher() {
-        screenCaptureLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
-            result ->
-            if (result.resultCode == RESULT_OK && result.data != null) {
-                this.resultIntent = result.data
-                this.resultCode = result.resultCode
-                android.widget.Toast.makeText(this, "Permission granted", android.widget.Toast.LENGTH_SHORT).show()
-                ScreenCaptureService.startCaptureService(this, result.data!!, resultCode)
-            } else {
-                android.widget.Toast.makeText(this, "Permission not granted", android.widget.Toast.LENGTH_SHORT).show()
+        screenCaptureLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == RESULT_OK && result.data != null) {
+                    this.resultIntent = result.data
+                    this.resultCode = result.resultCode
+                    android.widget.Toast.makeText(
+                        this,
+                        "Permission granted",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                    ScreenCaptureService.startCaptureService(this, result.data!!, resultCode)
+                } else {
+                    android.widget.Toast.makeText(
+                        this,
+                        "Permission not granted",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
-        }
     }
 
     fun requestScreenCapturePermission() {
@@ -77,20 +85,38 @@ class MainActivity : AppCompatActivity() {
     fun captureAndDoOCR() {
         val projection = mediaProjectionManager.getMediaProjection(resultCode, resultIntent!!)
         ScreenCaptureManager.capture(this, projection) { bitmap ->
-            // Handle the captured bitmap, e.g., perform OCR
-            // For example, you can pass it to an OCR library or save it
-            OCRProcessor.recognizeText(bitmap, onTextExtracted =  { text ->
-                android.widget.Toast.makeText(this, "OCR Result: $text", android.widget.Toast.LENGTH_LONG).show()
-            },onError = { e ->
-                android.widget.Toast.makeText(this, "OCR Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            OCRProcessor.recognizeText(bitmap, onTextExtracted = { text ->
+                android.widget.Toast.makeText(
+                    this,
+                    "OCR Result: $text",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }, onError = { e ->
+                android.widget.Toast.makeText(
+                    this,
+                    "OCR Error: ${e.message}",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
             })
 
         }
 
     }
-}
 
-private fun MainActivity.startOcrInterval(i: Int) {}
+    fun startOcrInterval(interval: Int) {
+        val intent = Intent(this, OcrForegroundService::class.java).apply {
+            putExtra(OcrForegroundService.EXTRA_INTERVAL_MS, interval)
+            // Optional: pass screen capture permission data if service needs it
+            intent?.let {
+                putExtra(OcrForegroundService.EXTRA_RESULT_CODE, resultCode)
+                putExtra(OcrForegroundService.EXTRA_RESULT_INTENT, it)
+            }
+        }
+        ContextCompat.startForegroundService(this, intent)
+    }
 
-private fun MainActivity.stopOcrInterval() {
+    fun stopOcrInterval() {
+        stopService(Intent(this, OcrForegroundService::class.java))
+    }
+
 }

@@ -1,0 +1,84 @@
+package com.example.myapplication
+
+import android.app.Activity
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.os.Handler
+import android.os.IBinder
+import android.os.Looper
+import android.util.Log
+import android.widget.Toast
+import androidx.core.app.NotificationCompat
+
+class OcrForegroundService : Service() {
+    companion object {
+        const val CHANNEL_ID = "OCR_FOREGROUND_CHANNEL"
+        const val INTERVAL_MS = 10000L
+        const val EXTRA_INTERVAL_MS = "extra_interval_ms"
+        const val EXTRA_RESULT_INTENT = "extra_result_intent"
+        const val EXTRA_RESULT_CODE = "extra_result_code"
+    }
+
+
+    private var intervalMs = 10_000L
+    private val handler = Handler(Looper.getMainLooper())
+    private val runnable = object : Runnable {
+        override fun run(){
+            captureAndDoOCR()
+            handler.postDelayed(this, INTERVAL_MS)
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        createNotificationChannel();
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "OCR Foreground Service"
+            val descriptionText = "Channel for OCR foreground service"
+            val importance = NotificationManager.IMPORTANCE_LOW
+            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+                description = descriptionText
+            }
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun captureAndDoOCR() {
+        Toast.makeText(this, "Performing OCR work...", Toast.LENGTH_SHORT).show()
+        // Placeholder for actual OCR work.
+        Log.d("OcrForegroundService", "Performing OCR work...")
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+        intervalMs = intent?.getLongExtra(EXTRA_INTERVAL_MS, intervalMs) ?: intervalMs
+        val resultCode = intent?.getIntExtra(EXTRA_RESULT_CODE, Activity.RESULT_CANCELED)
+        val resultData = intent?.getParcelableExtra<Intent>(EXTRA_RESULT_INTENT)
+
+
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Auto OCR Running")
+            .setContentText("Running ocr every ${INTERVAL_MS/1000}} seconds")
+            .setSmallIcon(android.R.drawable.ic_menu_camera)
+            .build()
+        startForeground(1, notification)
+        handler.post(runnable)
+        return START_STICKY
+    }
+
+    override fun onBind(intent: android.content.Intent?) = null
+
+    override fun onDestroy() {
+        handler.removeCallbacks(runnable)
+        super.onDestroy()
+    }
+}
