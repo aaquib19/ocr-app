@@ -18,7 +18,7 @@ import androidx.core.content.ContextCompat
 class MainActivity : AppCompatActivity() {
     private lateinit var mediaProjectionManager: MediaProjectionManager
     private var resultIntent: Intent? = null
-    private var resultCode: Int = 0
+    private var resultCode: Int = RESULT_CANCELED
 
     private lateinit var screenCaptureLauncher: ActivityResultLauncher<Intent>
 
@@ -86,6 +86,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun captureAndDoOCR() {
+        if (resultIntent == null || resultCode != RESULT_OK) {
+            android.widget.Toast.makeText(this, "Requesting screen capture permission…", android.widget.Toast.LENGTH_SHORT).show()
+            requestScreenCapturePermission()
+            return
+        }
         val projection = mediaProjectionManager.getMediaProjection(resultCode, resultIntent!!)
         ScreenCaptureManager.capture(this, projection) { bitmap ->
             OCRProcessor.recognizeText(bitmap, onTextExtracted = { text ->
@@ -107,15 +112,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun startOcrInterval(interval: Long) {
-        val intent = Intent(this, OcrForegroundService::class.java).apply {
-            putExtra(OcrForegroundService.EXTRA_INTERVAL_MS, interval)
-            // Optional: pass screen capture permission data if service needs it
-            intent?.let {
-                putExtra(OcrForegroundService.EXTRA_RESULT_CODE, resultCode)
-                putExtra(OcrForegroundService.EXTRA_RESULT_INTENT, resultIntent)
-            }
+        if (resultIntent == null || resultCode != RESULT_OK) {
+            android.widget.Toast.makeText(this, "Requesting screen capture permission…", android.widget.Toast.LENGTH_SHORT).show()
+            requestScreenCapturePermission()
+            return
         }
-        ContextCompat.startForegroundService(this, intent)
+
+        val serviceIntent = Intent(this, OcrForegroundService::class.java).apply {
+            putExtra(OcrForegroundService.EXTRA_INTERVAL_MS, interval)
+            putExtra(OcrForegroundService.EXTRA_RESULT_CODE, resultCode)
+            putExtra(OcrForegroundService.EXTRA_RESULT_INTENT, resultIntent)
+        }
+        ContextCompat.startForegroundService(this, serviceIntent)
     }
 
     fun stopOcrInterval() {
