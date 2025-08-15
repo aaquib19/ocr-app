@@ -9,6 +9,7 @@ import android.widget.AutoCompleteTextView
 import android.widget.Button
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 
@@ -22,6 +23,8 @@ class MainActivity : AppCompatActivity() {
     private var resultCode: Int = RESULT_CANCELED
 
     private lateinit var screenCaptureLauncher: ActivityResultLauncher<Intent>
+    private val viewModel : ScreenOcrViewModel by viewModels()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,11 +63,10 @@ class MainActivity : AppCompatActivity() {
     private fun registerScreenCaptureLauncher() {
         screenCaptureLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == RESULT_OK && result.data != null) {
+                if (viewModel.isProjectionPermissionGranted(result.resultCode, result.data)) {
                     this.resultIntent = result.data
                     this.resultCode = result.resultCode
-                    Log.d(TAG, "MainActivity:resultCode:"+resultCode)
-                    Log.d(TAG, "MainActivity:resultIntent"+resultIntent)
+                    viewModel.startScreenCapture();
                     android.widget.Toast.makeText(
                         this,
                         "Permission granted",
@@ -86,7 +88,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun captureAndDoOCR() {
-        if (resultIntent == null || resultCode != RESULT_OK) {
+        if (!viewModel.isProjectionPermissionGranted(resultCode, resultIntent)) {
             android.widget.Toast.makeText(this, "Requesting screen capture permission…", android.widget.Toast.LENGTH_SHORT).show()
             requestScreenCapturePermission()
             return
