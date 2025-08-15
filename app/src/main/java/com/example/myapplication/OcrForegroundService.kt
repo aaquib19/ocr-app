@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -23,6 +24,9 @@ class OcrForegroundService : Service() {
         const val EXTRA_RESULT_CODE = "extra_result_code"
     }
 
+    private var resultIntent: Intent? = null
+    private var resultCode: Int = 0
+    private lateinit var mediaProjectionManager: MediaProjectionManager
 
     private var intervalMs = 10_000L
     private val handler = Handler(Looper.getMainLooper())
@@ -55,14 +59,35 @@ class OcrForegroundService : Service() {
     private fun captureAndDoOCR() {
         Toast.makeText(this, "Performing OCR work...", Toast.LENGTH_SHORT).show()
         // Placeholder for actual OCR work.
-        Log.d("OcrForegroundService", "Performing OCR work...")
+        mediaProjectionManager =
+            getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        val projection = mediaProjectionManager.getMediaProjection(resultCode, resultIntent!!)
+        Log.d("TAG", "OcrForegroundService:resultCode:"+resultCode)
+        Log.d("TAG", "OcrForegroundService:resultIntent"+resultIntent)
+        ScreenCaptureManager.capture(this, projection) { bitmap ->
+            OCRProcessor.recognizeText(bitmap, onTextExtracted = { text ->
+                android.widget.Toast.makeText(
+                    this,
+                    "OCR Result: $text",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }, onError = { e ->
+                android.widget.Toast.makeText(
+                    this,
+                    "OCR Error: ${e.message}",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            })
+
+        }
+
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         intervalMs = intent?.getLongExtra(EXTRA_INTERVAL_MS, intervalMs) ?: intervalMs
-        val resultCode = intent?.getIntExtra(EXTRA_RESULT_CODE, Activity.RESULT_CANCELED)
-        val resultData = intent?.getParcelableExtra<Intent>(EXTRA_RESULT_INTENT)
+        resultCode = intent?.getIntExtra(EXTRA_RESULT_CODE, resultCode) ?: resultCode
+        resultIntent = intent?.getParcelableExtra<Intent>(EXTRA_RESULT_INTENT)
 
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)

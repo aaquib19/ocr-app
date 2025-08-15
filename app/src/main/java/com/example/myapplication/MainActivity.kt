@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import android.media.projection.MediaProjectionManager
+import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
@@ -61,6 +62,8 @@ class MainActivity : AppCompatActivity() {
                 if (result.resultCode == RESULT_OK && result.data != null) {
                     this.resultIntent = result.data
                     this.resultCode = result.resultCode
+                    Log.d("TAG", "MainActivity:resultCode:"+resultCode)
+                    Log.d("TAG", "MainActivity:resultIntent"+resultIntent)
                     android.widget.Toast.makeText(
                         this,
                         "Permission granted",
@@ -103,13 +106,13 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun startOcrInterval(interval: Int) {
+    fun startOcrInterval(interval: Long) {
         val intent = Intent(this, OcrForegroundService::class.java).apply {
             putExtra(OcrForegroundService.EXTRA_INTERVAL_MS, interval)
             // Optional: pass screen capture permission data if service needs it
             intent?.let {
                 putExtra(OcrForegroundService.EXTRA_RESULT_CODE, resultCode)
-                putExtra(OcrForegroundService.EXTRA_RESULT_INTENT, it)
+                putExtra(OcrForegroundService.EXTRA_RESULT_INTENT, resultIntent)
             }
         }
         ContextCompat.startForegroundService(this, intent)
