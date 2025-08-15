@@ -36,10 +36,9 @@ class MainActivity : AppCompatActivity() {
         registerScreenCaptureLauncher()
         requestScreenCapturePermission()
         findViewById<Button>(R.id.buttonCaptureSS).setOnClickListener {
-            if (resultIntent == null) {
+            val hasPermission = viewModel.isProjectionPermissionGranted(resultCode, resultIntent)
+            if (viewModel.shouldRequestPermission(hasPermission)) {
                 requestScreenCapturePermission()
-            } else {
-                captureAndDoOCR();
             }
         }
     }
@@ -87,31 +86,6 @@ class MainActivity : AppCompatActivity() {
         screenCaptureLauncher.launch(permissionIntent)
     }
 
-    fun captureAndDoOCR() {
-        if (!viewModel.isProjectionPermissionGranted(resultCode, resultIntent)) {
-            android.widget.Toast.makeText(this, "Requesting screen capture permission…", android.widget.Toast.LENGTH_SHORT).show()
-            requestScreenCapturePermission()
-            return
-        }
-        val projection = mediaProjectionManager.getMediaProjection(resultCode, resultIntent!!)
-        ScreenCaptureManager.capture(this, projection) { bitmap ->
-            OCRProcessor.recognizeText(bitmap, onTextExtracted = { text ->
-                android.widget.Toast.makeText(
-                    this,
-                    "OCR Result: $text",
-                    android.widget.Toast.LENGTH_LONG
-                ).show()
-            }, onError = { e ->
-                android.widget.Toast.makeText(
-                    this,
-                    "OCR Error: ${e.message}",
-                    android.widget.Toast.LENGTH_LONG
-                ).show()
-            })
-
-        }
-
-    }
 
     fun startOcrInterval(interval: Long) {
         if (resultIntent == null || resultCode != RESULT_OK) {

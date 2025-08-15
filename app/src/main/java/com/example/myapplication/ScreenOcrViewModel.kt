@@ -7,8 +7,10 @@ import androidx.lifecycle.ViewModel
 class ScreenOcrViewModel : ViewModel() {
 
     fun isProjectionPermissionGranted(resultCode: Int, resultIntent: Intent? ): Boolean {
-        return resultCode == Activity.RESULT_OK && resultIntent != null
+        return resultIntent != null && resultCode == Activity.RESULT_OK
     }
+
+    fun shouldRequestPermission(hasPermission: Boolean): Boolean = !hasPermission
 
     fun startScreenCapture() {
     }
