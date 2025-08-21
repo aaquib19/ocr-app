@@ -3,13 +3,13 @@ package com.example.myapplication
 import android.content.Intent
 import android.media.projection.MediaProjectionManager
 import android.os.Bundle
-import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 
@@ -25,6 +25,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var screenCaptureLauncher: ActivityResultLauncher<Intent>
     private val viewModel : ScreenOcrViewModel by viewModels()
 
+    private var permissionDialog : AlertDialog? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,11 +36,11 @@ class MainActivity : AppCompatActivity() {
         initializeTimerDropdown()
 
         registerScreenCaptureLauncher()
-        requestScreenCapturePermission()
+//        requestScreenCapturePermission()
         findViewById<Button>(R.id.buttonCaptureSS).setOnClickListener {
             val hasPermission = viewModel.isProjectionPermissionGranted(resultCode, resultIntent)
             if (viewModel.shouldRequestPermission(hasPermission)) {
-                requestScreenCapturePermission()
+                showPermissionInfoAndRequest()
             }
         }
     }
@@ -104,6 +106,16 @@ class MainActivity : AppCompatActivity() {
 
     fun stopOcrInterval() {
         stopService(Intent(this, OcrForegroundService::class.java))
+    }
+
+    private fun showPermissionInfoAndRequest() {
+        permissionDialog?.dismiss()
+        permissionDialog = AlertDialog.Builder(this)
+            .setTitle("Allow screen capture")
+            .setMessage("We’ll ask Android for permission to capture your screen so we can run OCR. No images leave your device.")
+            .setPositiveButton("Continue") { _, _ -> requestScreenCapturePermission() }
+            .setNegativeButton("Not now", null).create()
+        permissionDialog?.show()
     }
 
 }
